@@ -10,7 +10,6 @@ pipeline {
         DB_URL = "jdbc:postgresql://host.docker.internal:5432/epms_db"
     }
 
-    // Various stages in the Pipeline Process:
     stages {
         stage('Checkout') {
             steps {
@@ -21,15 +20,20 @@ pipeline {
         stage('Build') {
             steps {
                 // Build docker image using Dockerfile
-                bat "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -f Dockerfile ."
+                sh '''
+                    echo "🚀 Building Docker image..."
+                    docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -f Dockerfile .
+                '''
             }
         }
-
 
         stage('Run Container') {
             steps {
                 script {
-                    bat "docker run -e DB_URL=jdbc:postgresql://host.docker.internal:5432/epms_db -d --name employeeprofilemanagement -p 8200:8200 ${DOCKER_IMAGE}:${BUILD_NUMBER}"
+                    sh '''
+                        echo "🐳 Running Docker container..."
+                        docker run -e DB_URL=${DB_URL} -d --name employeeprofilemanagement -p 8200:8200 ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                    '''
                 }
             }
         }
