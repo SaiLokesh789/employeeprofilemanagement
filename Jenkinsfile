@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/HariharaJujjarapu/employeeprofilemanagement'
+                git branch: 'main', url: 'https://github.com/SaiLokesh789/employeeprofilemanagement'
             }
         }
 
