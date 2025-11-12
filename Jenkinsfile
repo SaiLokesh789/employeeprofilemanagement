@@ -2,6 +2,8 @@ pipeline {
     agent any
 
     environment {
+
+        KUBECONFIG = "/Users/sailokesh/.kube/config"
         // Docker image name
         DOCKER_IMAGE = "employeeprofilemanagement_image"
 
