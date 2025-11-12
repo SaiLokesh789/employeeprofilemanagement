@@ -71,18 +71,19 @@ pipeline {
             steps {
                 sh '''
                     echo "📦 Updating Docker image in Kubernetes manifest..."
-                    # Replace image tag inside deployment YAML dynamically (sed command)
-                    sed -i "s|image: .*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|g" deployment.yaml
+
+                    # macOS-compatible sed fix
+                    sed -i '' "s|image: .*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|g" deployment.yaml
 
                     echo "📁 Applying Namespace..."
                     kubectl apply -f namespace.yaml
 
                     echo "🚀 Deploying to Kubernetes..."
-                    kubectl apply -n ${K8S_NAMESPACE} -f deployment.yaml
-                    kubectl apply -n ${K8S_NAMESPACE} -f service.yaml
+                    kubectl apply -n employeemanagementsystem -f deployment.yaml
+                    kubectl apply -n employeemanagementsystem -f service.yaml
 
                     echo "⏳ Waiting for rollout to finish..."
-                    kubectl rollout status deployment/employeeprofilemanagement-deployment -n ${K8S_NAMESPACE}
+                    kubectl rollout status deployment/employeemanagementsystem-deployment -n employeemanagementsystem
 
                     echo "✅ Kubernetes deployment completed!"
                 '''
