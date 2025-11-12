@@ -9,15 +9,25 @@ pipeline {
         DB_URL = "jdbc:postgresql://host.docker.internal:5432/epms_db"
         DB_USERNAME = "postgres"
         DB_PASSWORD = "postgres"
+
+        // Kubernetes Namespace
+        K8S_NAMESPACE = "epms-namespace"
     }
 
     stages {
+
+        /* -----------------------------------------
+           1. CHECKOUT CODE
+        ----------------------------------------- */
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/SaiLokesh789/employeeprofilemanagement'
             }
         }
 
+        /* -----------------------------------------
+           2. BUILD DOCKER IMAGE
+        ----------------------------------------- */
         stage('Build') {
             steps {
                 sh '''
@@ -27,22 +37,21 @@ pipeline {
             }
         }
 
+        /* -----------------------------------------
+           3. RUN DOCKER LOCALLY (optional)
+        ----------------------------------------- */
         stage('Run Container') {
             steps {
                 script {
                     sh '''
-                        echo "🧹 Cleaning up any existing container..."
+                        echo "🧹 Cleaning up old container..."
 
-                        # Stop and remove existing container if it exists
                         if [ "$(docker ps -aq -f name=employeeprofilemanagement)" ]; then
-                            echo "🛑 Stopping existing container..."
                             docker stop employeeprofilemanagement || true
-
-                            echo "🗑️ Removing existing container..."
                             docker rm -f employeeprofilemanagement || true
                         fi
 
-                        echo "🐳 Running new Docker container..."
+                        echo "🐳 Running container..."
                         docker run -d \
                             --name employeeprofilemanagement \
                             -e SPRING_DATASOURCE_URL=${DB_URL} \
@@ -54,14 +63,39 @@ pipeline {
                 }
             }
         }
+
+        /* -----------------------------------------
+           4. KUBERNETES DEPLOYMENT
+        ----------------------------------------- */
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                    echo "📦 Updating Docker image in Kubernetes manifest..."
+                    # Replace image tag inside deployment YAML dynamically (sed command)
+                    sed -i "s|image: .*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|g" deployment.yaml
+
+                    echo "📁 Applying Namespace..."
+                    kubectl apply -f namespace.yaml
+
+                    echo "🚀 Deploying to Kubernetes..."
+                    kubectl apply -n ${K8S_NAMESPACE} -f deployment.yaml
+                    kubectl apply -n ${K8S_NAMESPACE} -f service.yaml
+
+                    echo "⏳ Waiting for rollout to finish..."
+                    kubectl rollout status deployment/employeeprofilemanagement-deployment -n ${K8S_NAMESPACE}
+
+                    echo "✅ Kubernetes deployment completed!"
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo "✅ Checkout, Build, Dockerize & Deploy completed successfully!"
+            echo "🎉 SUCCESS: Checkout, Build, Docker, and Kubernetes Deployment Completed!"
         }
         failure {
-            echo "❌ Build failed!"
+            echo "❌ Pipeline failed!"
         }
     }
 }
