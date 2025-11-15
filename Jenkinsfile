@@ -42,29 +42,29 @@ pipeline {
         /* -----------------------------------------
            3. RUN DOCKER LOCALLY (optional)
         ----------------------------------------- */
-        stage('Run Container') {
-            steps {
-                script {
-                    sh '''
-                        echo "🧹 Cleaning up old container..."
+        // stage('Run Container') {
+        //     steps {
+        //         script {
+        //             sh '''
+        //                 echo "🧹 Cleaning up old container..."
 
-                        if [ "$(docker ps -aq -f name=employeeprofilemanagement)" ]; then
-                            docker stop employeeprofilemanagement || true
-                            docker rm -f employeeprofilemanagement || true
-                        fi
+        //                 if [ "$(docker ps -aq -f name=employeeprofilemanagement)" ]; then
+        //                     docker stop employeeprofilemanagement || true
+        //                     docker rm -f employeeprofilemanagement || true
+        //                 fi
 
-                        echo "🐳 Running container..."
-                        docker run -d \
-                            --name employeeprofilemanagement \
-                            -e SPRING_DATASOURCE_URL=${DB_URL} \
-                            -e SPRING_DATASOURCE_USERNAME=${DB_USERNAME} \
-                            -e SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD} \
-                            -p 8200:8200 \
-                            ${DOCKER_IMAGE}:${BUILD_NUMBER}
-                    '''
-                }
-            }
-        }
+        //                 echo "🐳 Running container..."
+        //                 docker run -d \
+        //                     --name employeeprofilemanagement \
+        //                     -e SPRING_DATASOURCE_URL=${DB_URL} \
+        //                     -e SPRING_DATASOURCE_USERNAME=${DB_USERNAME} \
+        //                     -e SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD} \
+        //                     -p 8200:8200 \
+        //                     ${DOCKER_IMAGE}:${BUILD_NUMBER}
+        //             '''
+        //         }
+        //     }
+        // }
 
         /* -----------------------------------------
            4. KUBERNETES DEPLOYMENT
